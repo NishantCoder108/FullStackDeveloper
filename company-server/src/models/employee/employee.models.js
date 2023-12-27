@@ -26,11 +26,9 @@ const employeeSchema = new Schema({
 
 employeeSchema.pre("save", async function (next) {
   try {
-    const salt = await bcrypt.genSalt(10);
-    console.log({ salt });
-    const hashedPassword = await bcrypt.hash(this.password, salt);
-    console.log({ hashedPassword });
-    this.password = hashedPassword;
+    if (!this.isModified("password")) return next();
+
+    this.password = await bcrypt.hash(this.password, (saltRounds = 10));
     next();
   } catch (error) {
     next(error);
