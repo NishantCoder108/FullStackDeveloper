@@ -9,8 +9,8 @@ const generateAccessAndRefreshToken = async (_id) => {
 
         console.log("generateAccessAndRefreshToken", { user });
 
-        const accessToken = user.generateAccessToken();
-        const refreshToken = user.generateRefreshToken();
+        const accessToken = await user.generateAccessToken();
+        const refreshToken = await user.generateRefreshToken();
 
         user.refreshToken = refreshToken;
 
@@ -35,36 +35,39 @@ export const Signup = async (req, res) => {
                 "Please provide email, password, name, and role."
             );
         }
-        const user = await User.findOne({
-            email: email,
-        });
+        const user = await User.findOne({ email });
         console.log("Signup");
         console.log({ user });
-        if (user) {
-            new ApiError(
+        if (!user) {
+            const createdUser = await User.create({
+                email,
+                password,
+                name,
+                role,
+            });
+
+            console.log({ createdUser });
+
+            res.status(201).json(
+                ApiResponse(
+                    201,
+                    "Congratulations! Your account has been created successfully. "
+                )
+            );
+        } else {
+            throw new ApiError(
                 400,
                 "Uh-oh! Account already exists. Log in or reset password."
             );
         }
-
-        const createdUser = await User.create({
-            email,
-            password,
-            name,
-            role,
-        });
-
-        console.log({ createdUser });
-        console.log("Uservalidate 46");
-        res.status(201).json(
-            ApiResponse(
-                201,
-                "Congratulations! Your account has been created successfully. "
-            )
-        );
     } catch (err) {
         console.log({ err });
-        res.status(500).json(ApiError(500, err.message));
+        res.status(500).json(
+            ApiResponse(
+                err.status || 500,
+                err.message || "Internal Server Error"
+            )
+        );
     }
 };
 export const Login = async (req, res) => {
@@ -91,9 +94,9 @@ export const Login = async (req, res) => {
             );
         }
 
-        const { accessToken, refreshToken } = generateAccessAndRefreshToken(
-            user._id
-        );
+        const { accessToken, refreshToken } =
+            await generateAccessAndRefreshToken(user._id);
+        console.log({ accessToken }, { refreshToken });
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
             secure: true,
@@ -103,14 +106,18 @@ export const Login = async (req, res) => {
             secure: true,
         });
 
-        const { refreshToken: token, password: pass, ...userData } = user;
-        res.status(201).json(
+        const { name, email: userEmail, role: userRole, ...userData } = user;
+        res.status(200).json(
             ApiResponse(
-                201,
+                200,
                 "Congratulations! You have successfully logged in.",
                 {
                     token: accessToken,
-                    user: userData,
+                    user: {
+                        name,
+                        email: userEmail,
+                        role: userRole,
+                    },
                 }
             )
         );
