@@ -7,7 +7,7 @@ export const verifyJWT = async (req, _, next) => {
     try {
         const token =
             req.cookies?.accessToken ||
-            req.headers?.Authorization?.split(" ")[1];
+            req.headers["authorization"].split(" ")[1];
 
         if (!token) {
             throw new ApiError(401, "Unauthorized - Token not found.");
