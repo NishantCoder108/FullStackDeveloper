@@ -123,7 +123,7 @@ export const Login = async (req, res) => {
         );
     } catch (err) {
         console.log({ err });
-        res.status(500).json(ApiResponse(500, err.message));
+        res.status(500).json(ApiResponse(err.status, err.message));
     }
 };
 
