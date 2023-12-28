@@ -57,6 +57,7 @@ userSchema.method("generateAccessToken", async function () {
             _id: this._id,
         },
         ACCESS_TOKEN_SECRET,
+        // { expiresIn: 5 }
         { expiresIn: ACCESS_TOKEN_EXPIRY }
     );
 
@@ -69,6 +70,7 @@ userSchema.method("generateRefreshToken", async function () {
         },
         REFRESH_TOKEN_SECRET,
         { expiresIn: REFRESH_TOKEN_EXPIRY }
+        // { expiresIn: REFRESH_TOKEN_EXPIRY }
     );
     return token;
 });

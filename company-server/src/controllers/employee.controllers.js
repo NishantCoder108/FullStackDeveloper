@@ -78,12 +78,15 @@ export const Login = async (req, res) => {
     try {
         const { email, password, role } = req.body;
         if (!email || !password || !role) {
-            throw ApiError(400, "Please provide email, password,  and role.");
+            throw new ApiError(
+                400,
+                "Please provide email, password,  and role."
+            );
         }
         const user = await User.findOne({ email });
         console.log({ user });
         if (!user) {
-            new ApiError(
+            throw new ApiError(
                 401,
                 "No account with these credentials. Verify and try again."
             );
