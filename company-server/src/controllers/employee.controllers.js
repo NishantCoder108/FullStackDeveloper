@@ -87,6 +87,9 @@ export const Login = async (req, res) => {
             );
         }
 
+        if (role !== user.role) {
+            throw new ApiError(401, "You are not authorized for this role.");
+        }
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
