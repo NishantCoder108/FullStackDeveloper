@@ -1,10 +1,12 @@
 import mongoose, { Schema } from "mongoose";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 import {
-    ACCESS_SECRET_KEY,
+    ACCESS_TOKEN_SECRET,
     ACCESS_TOKEN_EXPIRY,
     REFRESH_TOKEN_EXPIRY,
     REFRESH_TOKEN_SECRET,
-} from "../..";
+} from "../../index.js";
 
 const userSchema = new Schema(
     {
@@ -33,7 +35,6 @@ const userSchema = new Schema(
         },
         refreshToken: {
             type: String,
-            required: true,
         },
     },
     { timestamps: true }
@@ -43,25 +44,25 @@ userSchema.pre("save", async function (next) {
     try {
         if (!this.isModified("password")) return next();
 
-        this.password = await bcrypt.hash(this.password, (saltRounds = 10));
+        this.password = await bcrypt.hash(this.password, 10);
         next();
     } catch (error) {
         next(error);
     }
 });
 
-userSchema.method.generateAccessToken = async function () {
+userSchema.method("generateAccessToken", async function () {
     const token = await jwt.sign(
         {
             _id: this._id,
         },
-        ACCESS_SECRET_KEY,
+        ACCESS_TOKEN_SECRET,
         { expiresIn: ACCESS_TOKEN_EXPIRY }
     );
 
     return token;
-};
-userSchema.method.generateRefreshToken = async function () {
+});
+userSchema.method("generateRefreshToken", async function () {
     const token = await jwt.sign(
         {
             _id: this._id,
@@ -69,7 +70,22 @@ userSchema.method.generateRefreshToken = async function () {
         REFRESH_TOKEN_SECRET,
         { expiresIn: REFRESH_TOKEN_EXPIRY }
     );
-
     return token;
-};
+});
+
 export const User = new mongoose.model("User", userSchema);
+
+/**
+ * Time in seconds
+ {
+  decoded: {
+    id: 'wer232345k',
+    name: 'Mohgna',
+    email: 'akwefj',
+    kwoef: 'skdfj',
+    skdjfs: 'qwn',
+    iat: 1703751094,
+    exp: 1703754694
+  }
+}
+ */
