@@ -1,12 +1,13 @@
 import jwt from "jsonwebtoken";
-import { ApiError } from "../utils/ApiError";
-import { ACCESS_TOKEN_SECRET } from "..";
-import { User } from "../models/employee/employee.models";
+import { ApiError } from "../utils/ApiError.js";
+import { ACCESS_TOKEN_SECRET } from "../index.js";
+import { User } from "../models/employee/employee.models.js";
 
 export const verifyJWT = async (req, _, next) => {
     try {
         const token =
-            req.cookies?.accessToken || req.headers.Authorization.split(" ")[1];
+            req.cookies?.accessToken ||
+            req.headers?.Authorization?.split(" ")[1];
 
         if (!token) {
             throw new ApiError(401, "Unauthorized - Token not found.");
@@ -14,14 +15,16 @@ export const verifyJWT = async (req, _, next) => {
 
         const decodedToken = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
-        const user = User.findById(decodedToken?._id).select(
-            "-refreshToken -password"
+        console.log({ decodedToken });
+        const user = await User.findById(decodedToken?._id).select(
+            "-password -refreshToken"
         );
+
         req.user = user;
         next();
     } catch (error) {
         console.log(error);
-        throw new ApiError(401, err.message || "Invalid Access Token");
+        next(new ApiError(401, error.message || "Invalid Access Token"));
     }
 };
 

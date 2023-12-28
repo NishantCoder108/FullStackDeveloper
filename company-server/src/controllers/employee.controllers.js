@@ -132,47 +132,32 @@ export const Login = async (req, res) => {
     }
 };
 
-/**
- * Employee Controller:
- * 
- *  > Signup
- *    - email password name role [HR,MARKETER,ADMIN,SOFTWARE_ENGINEER]
- *    - check  all fields is necessary
- *    - create object and save to db,
- *    - create token , sent to client for login or logout (directly send token to client)
-//  *    - make cookie , send cookie to , refresh token , access token 
-
- *  > Login
- *  > - email password role (for login )
- *    - give token in res
-//  *    - if token , redirect to home page
-
-    > Logout
-      - "/logout" , first jwt verify of token, 
-      - 
- */
-
-const logoutUser = asyncHandler(async (req, res) => {
-    await User.findByIdAndUpdate(
-        req.user._id,
-        {
-            $set: {
-                refreshToken: undefined,
-            },
-        },
-        {
-            new: true,
+export const Logout = async (req, res) => {
+    try {
+        console.log(req.user.id);
+        const userId = req.user?.id;
+        console.log({ userId });
+        if (!userId) {
+            throw new ApiError(500, "Error revoking refresh token.");
         }
-    );
+        const logoutUser = await User.findByIdAndUpdate(userId, {
+            refreshToken: null,
+        });
 
-    const options = {
-        httpOnly: true,
-        secure: true,
-    };
+        console.log({ logoutUser });
+        if (!logoutUser) {
+            throw new ApiError(500, "Not able to logout.");
+        }
+        const options = {
+            httpOnly: true,
+            secure: true,
+        };
 
-    return res
-        .status(200)
-        .clearCookie("accessToken", options)
-        .clearCookie("refreshToken", options)
-        .json(new ApiResponse(200, {}, "User logged Out"));
-});
+        res.status(200)
+            .clearCookie("accessToken", options)
+            .clearCookie("refreshToken", options)
+            .json(ApiResponse(200, "User logged Out"));
+    } catch (error) {
+        res.status(500).json(new ApiError(error.status, error.message));
+    }
+};

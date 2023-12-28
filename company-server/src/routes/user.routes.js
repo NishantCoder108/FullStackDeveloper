@@ -1,10 +1,12 @@
 import { Router } from "express";
-import { Login, Signup } from "../controllers/employee.controllers.js";
+import { Login, Logout, Signup } from "../controllers/employee.controllers.js";
+import { verifyJWT } from "../middlewares/auth.middlewares.js";
 
 const router = Router();
 
 router.route("/register").post(Signup);
 router.route("/login").post(Login);
+router.route("/logout").post(verifyJWT, Logout);
 
 /**
  router.route("/login").post(loginUser)
