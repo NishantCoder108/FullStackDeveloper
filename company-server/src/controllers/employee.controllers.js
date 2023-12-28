@@ -29,7 +29,9 @@ export const Signup = async (req, res) => {
     try {
         const { email, password, name, role } = req.body;
 
-        if (!email || !password || !name || !role) {
+        if (
+            [email, name, password, role].some((field) => field?.trim() === "")
+        ) {
             throw new ApiError(
                 400,
                 "Please provide email, password, name, and role."
