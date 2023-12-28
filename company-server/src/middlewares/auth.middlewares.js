@@ -1,19 +1,28 @@
 import jwt from "jsonwebtoken";
+import { ApiError } from "../utils/ApiError";
+import { ACCESS_TOKEN_SECRET } from "..";
+import { User } from "../models/employee/employee.models";
 
-export const verifyJWT = async (req, res, next) => {
-  try {
-    jwt.sign(
-      {
-        data: "foobar",
-      },
-      "secret",
-      { expiresIn: "1h" }
-    );
-    next();
-  } catch (error) {
-    console.log(error);
-    next(error);
-  }
+export const verifyJWT = async (req, _, next) => {
+    try {
+        const token =
+            req.cookies?.accessToken || req.headers.Authorization.split(" ")[1];
+
+        if (!token) {
+            throw new ApiError(401, "Unauthorized - Token not found.");
+        }
+
+        const decodedToken = jwt.verify(token, ACCESS_TOKEN_SECRET);
+
+        const user = User.findById(decodedToken?._id).select(
+            "-refreshToken -password"
+        );
+        req.user = user;
+        next();
+    } catch (error) {
+        console.log(error);
+        throw new ApiError(401, err.message || "Invalid Access Token");
+    }
 };
 
 // ms('2 days')  // 172800000
