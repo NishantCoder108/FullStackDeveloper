@@ -1,7 +1,9 @@
+import { REFRESH_TOKEN_SECRET } from "../index.js";
 import { User } from "../models/employee/employee.models.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const generateAccessAndRefreshToken = async (_id) => {
     try {
@@ -159,5 +161,46 @@ export const Logout = async (req, res) => {
             .json(ApiResponse(200, "User logged Out"));
     } catch (error) {
         res.status(500).json(new ApiError(error.status, error.message));
+    }
+};
+
+export const refreshAccessToken = async (req, res) => {
+    try {
+        const token = req.body.refreshToken || req.cookies.refreshToken;
+
+        if (!token) {
+            throw new ApiError(401, "Invalid token.");
+        }
+
+        const decodedToken = jwt.verify(token, REFRESH_TOKEN_SECRET);
+
+        const user = await User.findById(decodedToken._id);
+
+        console.log({ user });
+
+        if (!user) {
+            throw new ApiError(401, "Invalid refresh token.");
+        }
+
+        if (token !== user?.refreshToken) {
+            throw new ApiError(401, "Refresh token is expired or used.");
+        }
+
+        const { accessToken, refreshToken } =
+            await generateAccessAndRefreshToken(user._id);
+
+        const options = {
+            httpOnly: true,
+            secure: true,
+        };
+
+        res.status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", refreshToken, options)
+            .json(ApiResponse(200, "Access token refreshed", { accessToken }));
+    } catch (err) {
+        res.status(500).json(
+            new ApiError(err.status, err.message || "Internal server error.")
+        );
     }
 };
