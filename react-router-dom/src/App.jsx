@@ -34,13 +34,25 @@ const router = createBrowserRouter(
             path="/"
             element={
                 <div>
-                    <h2>Root</h2> <Outlet />{" "}
+                    <h2>Root</h2> <Outlet />
                 </div>
             }
             errorElement={<p>404 Not Found</p>}
         >
             <Route path="about" element={<h1>This is About page</h1>} />
             <Route path="contact" element={<h2>This is contact page</h2>} />
+
+            <Route
+                element={
+                    <div>
+                        AuthRoute <Outlet />
+                    </div>
+                }
+            >
+                <Route path="login" element={<h3>Login </h3>} />
+                <Route path="signup" element={<h3>Sign up </h3>} />
+                <Route path="logout" element={<h3>Logout </h3>} />
+            </Route>
         </Route>
     )
 );
