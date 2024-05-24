@@ -67,6 +67,27 @@ app.put("/edit-todo", async (req, res) => {
     }
 });
 
+app.delete("/delete-todo", async (req, res) => {
+    try {
+        const { id } = req.body;
+
+        const readFileData = await fs.readFile("./todo.json", "utf-8");
+        const parseData = JSON.parse(readFileData);
+
+        const idx = parseData.findIndex((item, i) => item.id === id);
+
+        if (idx !== -1) {
+            parseData.splice(idx, 1);
+            await fs.writeFile("./todo.json", JSON.stringify(parseData));
+            res.send(parseData);
+        } else {
+            res.status(404).send("Not Found");
+        }
+    } catch (error) {
+        res.send("Error: " + error);
+    }
+});
+
 app.listen(3000, () => {
     console.log("Server is running");
 });
