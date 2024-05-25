@@ -1,12 +1,16 @@
 const express = require("express");
 const fs = require("fs").promises;
-
+const path = require("path");
 const app = express();
 
 app.use(express.json());
 let idcnt = 1;
 
-app.get("/", async (req, res) => {
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "index.html"));
+});
+
+app.get("/todo", async (req, res) => {
     try {
         const data = await fs.readFile("./todo.json", "utf-8");
         const parseData = JSON.parse(data);

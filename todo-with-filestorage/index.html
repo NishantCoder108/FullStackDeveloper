@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Todo</title>
+    </head>
+    <body>
+        <form onsubmit="postData(event)" method="post">
+            <input type="text" id="title" required />
+            <input type="text" id="description" required />
+
+            <button type="submit">submit</button>
+        </form>
+
+        <script>
+            /*
+
+                         const editTodo = async (
+                            id,
+                            titleEle,
+                            descriptionEle,
+                            editBtn,
+                            eleIdx
+                        ) => {
+                            const titleInput = document.createElement("input");
+                            titleInput.type = "text";
+                            titleInput.value = titleEle.innerText.split(". ")[1];
+
+                            const descriptionInput = document.createElement("input");
+                            descriptionInput.type = "text";
+                            descriptionInput.value = descriptionEle.innerText;
+
+                            const saveBtn = document.createElement("button");
+                            saveBtn.innerText = "Save";
+
+                            console.log(titleInput, descriptionInput);
+                            console.log(titleEle, descriptionEle);
+
+                            titleEle.replaceWith(titleInput);
+                            descriptionEle.replaceWith(descriptionInput);
+                            editBtn.replaceWith(saveBtn);
+
+                            saveBtn.addEventListener("click", async () => {
+                                const title = titleInput.value;
+                                const description = descriptionInput.value;
+
+                                console.log({ title, description });
+                                const options = {
+                                    method: "PUT",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                    },
+                                    body: JSON.stringify({
+                                        id,
+                                        title,
+                                        description,
+                                    }),
+                                };
+
+                                try {
+                                    const response = await fetch(
+                                        "http://localhost:3000/edit-todo",
+                                        options
+                                    );
+
+                                    if (!response.ok) {
+                                        throw new Error(
+                                            "Edit todo is not updated successfully." +
+                                                response.statusText
+                                        );
+                                    }
+
+                                    const data = await response.json();
+
+                                    console.log("Updated todo: " + data);
+
+                                    const newTitleEle = document.createElement("h2");
+                                    const newDescEle = document.createElement("p");
+
+                                    newTitleEle.innerText = `${eleIdx}. ${title}`;
+                                    newDescEle.innerText = `${description}`;
+
+                                    titleInput.replaceWith(newTitleEle);
+                                    descriptionInput.replaceWith(newDescEle);
+
+                                    saveBtn.replaceWith(editBtn);
+                                    editBtn.addEventListener("click", () => {
+                                        editTodo(
+                                            id,
+                                            newTitleEle,
+                                            newDescEle,
+                                            editBtn,
+                                            eleIdx
+                                        );
+                                    });
+                                } catch (error) {
+                                    console.log("ERROR: ", error);
+                                }
+                            });
+                        };
+
+*/
+            const editTodo = async (
+                id,
+                titleEle,
+                descriptionEle,
+                editBtn,
+                eleIdx
+            ) => {
+                const titleInput = document.createElement("input");
+                titleInput.type = "text";
+                titleInput.value = titleEle.innerText.split(". ")[1];
+
+                const descriptionInput = document.createElement("input");
+                descriptionInput.type = "text";
+                descriptionInput.value = descriptionEle.innerText;
+
+                const saveBtn = document.createElement("button");
+                saveBtn.innerText = "Save";
+
+                console.log(titleInput, descriptionInput);
+                console.log(titleEle, descriptionEle);
+
+                titleEle.replaceWith(titleInput);
+                descriptionEle.replaceWith(descriptionInput);
+                editBtn.replaceWith(saveBtn);
+
+                saveBtn.addEventListener("click", async () => {
+                    const title = titleInput.value;
+                    const description = descriptionInput.value;
+
+                    console.log({ title, description });
+                    const options = {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            id,
+                            title,
+                            description,
+                        }),
+                    };
+
+                    try {
+                        const response = await fetch(
+                            "http://localhost:3000/edit-todo",
+                            options
+                        );
+
+                        if (!response.ok) {
+                            throw new Error(
+                                "Edit todo is not updated successfully." +
+                                    response.statusText
+                            );
+                        }
+
+                        const data = await response.json();
+
+                        console.log("Updated todo: " + data);
+
+                        const newTitleEle = document.createElement("h2");
+                        const newDescEle = document.createElement("p");
+
+                        newTitleEle.innerText = `${eleIdx}. ${title}`;
+                        newDescEle.innerText = `${description}`;
+
+                        titleInput.replaceWith(newTitleEle);
+                        descriptionInput.replaceWith(newDescEle);
+                        saveBtn.replaceWith(editBtn);
+
+                        editBtn.addEventListener("click", () => {
+                            editTodo(
+                                id,
+                                newTitleEle,
+                                newDescEle,
+                                editBtn,
+                                eleIdx
+                            );
+                        });
+                    } catch (error) {
+                        console.log("ERROR: ", error);
+                    }
+                });
+            };
+            async function postData(e) {
+                e.preventDefault();
+
+                const title = document.getElementById("title").value;
+                const description =
+                    document.getElementById("description").value;
+
+                console.log(title);
+                console.log(description);
+
+                const todo = {
+                    title,
+                    description,
+                };
+
+                const options = {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(todo),
+                };
+
+                try {
+                    const addTodo = await fetch(
+                        "http://localhost:3000/add-todo",
+                        options
+                    );
+
+                    const json = await addTodo.json();
+                    console.log(json);
+                    const eleId = document.getElementById("todoId");
+
+                    eleId.remove();
+
+                    getData();
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+
+            const getData = async (req, res) => {
+                try {
+                    const getTodo = await fetch("http://localhost:3000/todo");
+                    const jsonData = await getTodo.json();
+
+                    console.log(jsonData);
+
+                    const div = document.createElement("div");
+                    div.setAttribute("id", "todoId");
+
+                    for (let i = 0; i < jsonData.length; i++) {
+                        const h1 = document.createElement("h2");
+                        h1.innerText = i + 1 + ". " + jsonData[i].title;
+
+                        const p = document.createElement("p");
+                        p.innerText = jsonData[i].description;
+
+                        const deleteButton = document.createElement("button");
+                        deleteButton.innerText = "Delete";
+
+                        deleteButton.addEventListener("click", async () => {
+                            const options = {
+                                method: "DELETE",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify({ id: jsonData[i].id }),
+                            };
+
+                            try {
+                                const deleteRes = await fetch(
+                                    "http://localhost:3000/delete-todo",
+                                    options
+                                );
+                                const deleteJson = await deleteRes.json();
+
+                                console.log({ deleteJson });
+
+                                const removeItem =
+                                    document.getElementById("todoId");
+                                removeItem.remove();
+
+                                getData();
+                            } catch (error) {
+                                console.log({ error });
+                            }
+                        });
+
+                        const editButton = document.createElement("button");
+                        editButton.innerText = "Edit";
+
+                        editButton.addEventListener("click", () => {
+                            editTodo(jsonData[i].id, h1, p, editButton, i + 1);
+                        });
+
+                        div.appendChild(h1);
+                        div.appendChild(p);
+                        div.appendChild(deleteButton);
+                        div.appendChild(editButton);
+                    }
+                    document.body.appendChild(div);
+                } catch (error) {
+                    console.log("Error", error);
+                }
+            };
+
+            getData();
+        </script>
+    </body>
+</html>
