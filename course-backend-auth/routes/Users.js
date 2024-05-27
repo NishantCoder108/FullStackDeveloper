@@ -23,7 +23,8 @@ const isAuthenticate = (req, res, next) => {
         const token = req.headers["authorization"]?.split(" ")[1];
         const decoded = verifyJWTToken(token, secret);
 
-        req.user = decoded.user;
+        console.log({ decoded });
+        req.user = decoded;
         next();
     } catch (error) {
         res.status(401).json({
@@ -37,11 +38,11 @@ const isAuthenticate = (req, res, next) => {
 
 app.post("/signup", (req, res) => {
     const { username, password } = req.body;
-
-    USERS.push({ username, password, id: userCnt++ });
+    const id = userCnt++;
+    USERS.push({ username, password, id: id });
 
     try {
-        const token = createJWTToken({ username }, secret);
+        const token = createJWTToken({ username, id }, secret);
 
         res.json({
             message: " You are successfully signed up",
@@ -111,6 +112,82 @@ app.get("/courses", isAuthenticate, async (req, res) => {
     } catch (error) {
         res.status(500).json({
             message: "An error occurred while fetching courses",
+            error: error.message || "Unknown error",
+        });
+    }
+});
+
+//Buy courses
+app.post("/courses/:courseId", isAuthenticate, async (req, res) => {
+    try {
+        const { courseId } = req.params;
+        const reqUser = req.user;
+
+        console.log("Auth User", reqUser);
+        console.log("USERS", USERS);
+        const allCourseLists = await fs.readFile(
+            path.join(__dirname, "../Db/coursedb.json"),
+            "utf-8"
+        );
+
+        const parsedCourseLists = JSON.parse(allCourseLists);
+        const course = parsedCourseLists.find(
+            (course) => course.id === courseId
+        );
+
+        if (!course) {
+            res.status(404).json({
+                message: "Course not found",
+            });
+            return;
+        }
+
+        console.log(reqUser);
+        const userIdx = USERS.findIndex((u) => u.id === reqUser.id);
+        console.log(userIdx);
+
+        if (userIdx !== -1) {
+            const purchasedCourse = USERS[userIdx].purchasedCourse || [];
+            USERS[userIdx] = {
+                ...USERS[userIdx],
+                purchasedCourse: [...purchasedCourse, course],
+            };
+
+            res.status(200).json({
+                message: "Course purchased successfully",
+                user: USERS,
+            });
+
+            return;
+        }
+
+        res.status(401).json({
+            message: "You are not authenticated",
+        });
+    } catch (error) {
+        res.status(500).json({
+            message: "An error occurred while purchasing course",
+            error: error.message || "Unknown error",
+        });
+    }
+});
+
+app.get("/courses/all", isAuthenticate, (req, res) => {
+    try {
+        const reqUser = req.user;
+
+        const userIdx = USERS.findIndex((u) => u.id === reqUser.id);
+
+        if (userIdx !== -1) {
+            const purchasedCourse = USERS[userIdx].purchasedCourse || [];
+            res.status(200).json({
+                message: "All purchased courses",
+                user: purchasedCourse,
+            });
+        }
+    } catch (error) {
+        res.status(500).json({
+            message: "No course",
             error: error.message || "Unknown error",
         });
     }
