@@ -1,13 +1,12 @@
 const express = require("express");
 const { createJWTToken, verifyJWTToken } = require("../utils/jwtAuthenticate");
-
+const User = require("../models/user.models");
+const Course = require("../models/course.models");
 const app = express();
 const path = require("path");
 const fs = require("fs").promises;
 
 const secret = "user-secret";
-
-const USERS = [];
 
 let userCnt = 1;
 const isAuthenticate = (req, res, next) => {
@@ -34,20 +33,33 @@ const isAuthenticate = (req, res, next) => {
         return;
     }
 };
+
 //Sign up
 
-app.post("/signup", (req, res) => {
+app.post("/signup", async (req, res) => {
     const { username, password } = req.body;
-    const id = userCnt++;
-    USERS.push({ username, password, id: id });
 
     try {
-        const token = createJWTToken({ username, id }, secret);
+        const user = await User.findOne({ username: username });
+
+        if (user) {
+            res.status(400).json({
+                message: "User already exists",
+            });
+            return;
+        }
+
+        const newUser = new User({
+            username,
+            password,
+        });
+        await newUser.save();
+
+        const token = createJWTToken({ username, id: newUser.id }, secret);
 
         res.json({
             message: " You are successfully signed up",
             token,
-            allUsers: USERS,
         });
     } catch (error) {
         res.status(500).json({
@@ -58,22 +70,22 @@ app.post("/signup", (req, res) => {
 });
 
 //Login
-app.post("/login", (req, res) => {
+app.post("/login", async (req, res) => {
     const { username, password } = req.body;
 
-    const user = USERS.find(
-        (user) => user.username === username && user.password === password
-    );
-
-    if (!user) {
-        res.json({
-            message: "Invalid username or password",
-        });
-
-        return;
-    }
-
     try {
+        const user = await User.findOne({ username, password }).select(
+            "-password"
+        );
+
+        if (!user) {
+            res.status(401).json({
+                message: "Invalid username or password",
+            });
+
+            return;
+        }
+
         const token = createJWTToken({ username, id: user.id }, secret);
 
         res.json({
