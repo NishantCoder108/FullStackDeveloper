@@ -2,27 +2,30 @@ const express = require("express");
 const fs = require("fs").promises;
 const path = require("path");
 
+const Admin = require("../models/admin.models");
+const Course = require("../models/course.models");
+const User = require("../models/user.models");
+
+console.log({ Admin: Admin, Course: Course, User: User });
+
 const { createJWTToken, verifyJWTToken } = require("../utils/jwtAuthenticate");
 
 const app = express();
 const secret = "admin-secret";
 
-const ADMIN = [];
-
 const isAuthenticate = (req, res, next) => {
-    console.log(req.headers);
-
-    if (!req.headers["authorization"]) {
-        res.status(401).json({
-            message: "You are not authenticated",
-        });
-        return;
-    }
     try {
+        if (!req.headers["authorization"]) {
+            res.status(401).json({
+                message: "You are not authenticated",
+            });
+            return;
+        }
+
         const token = req.headers["authorization"]?.split(" ")[1];
         const decoded = verifyJWTToken(token, secret);
 
-        req.user = decoded.user;
+        req.user = decoded;
         next();
     } catch (error) {
         res.status(401).json({
@@ -37,9 +40,20 @@ const isAuthenticate = (req, res, next) => {
 app.post("/signup", async (req, res) => {
     const { username, password } = req.body;
     const payload = { username, password };
-    ADMIN.push(payload);
 
     try {
+        const isAdminUser = await Admin.findOne({ username, password });
+
+        if (isAdminUser) {
+            res.json({
+                message: "You are already signed up. Please log in.",
+            });
+            return;
+        }
+
+        const adminUser = new Admin({ username, password });
+        await adminUser.save();
+
         const token = createJWTToken(payload, secret);
 
         res.json({
