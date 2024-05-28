@@ -104,38 +104,22 @@ app.post("/login", async (req, res) => {
 //Create course
 app.post("/courses", isAuthenticate, async (req, res) => {
     const { imageurl, title, description, price, isPublished } = req.body;
-    const courseId = JSON.stringify(Date.now()).slice(-5);
-
-    const course = {
-        imageurl,
-        title,
-        description,
-        price,
-        isPublished,
-        id: courseId,
-    };
 
     try {
-        const allCourseLists = await fs.readFile(
-            path.join(__dirname, "../Db/coursedb.json"),
-            "utf-8"
-        );
-        const parsedCourseLists = JSON.parse(allCourseLists);
+        const course = new Course({
+            imageurl,
+            title,
+            description,
+            price,
+            isPublished,
+        });
+        await course.save();
 
-        console.log(parsedCourseLists);
-
-        parsedCourseLists.push(course);
-
-        const updatedCourseLists = JSON.stringify(parsedCourseLists);
-
-        await fs.writeFile(
-            path.join(__dirname, "../Db/coursedb.json"),
-            updatedCourseLists
-        );
+        // console.log(`Course`, course);
 
         res.status(201).json({
             message: "Course created successfully",
-            courseId,
+            courseId: course.id,
         });
     } catch (error) {
         console.log(error);
@@ -150,19 +134,16 @@ app.post("/courses", isAuthenticate, async (req, res) => {
 //Get all courses list
 app.get("/courses", isAuthenticate, async (req, res) => {
     try {
-        const allCourseLists = await fs.readFile(
-            path.join(__dirname, "../Db/coursedb.json"),
-            "utf-8"
-        );
-        const parsedCourseLists = JSON.parse(allCourseLists);
+        const course = await Course.find({});
 
-        if (parsedCourseLists.length < 1) {
+        if (!course || course.length === 0) {
             res.status(404).json({
-                message: "No courses found",
+                message: "Course not found",
+                course: course,
             });
             return;
         }
-        res.status(200).json(parsedCourseLists);
+        res.status(200).json({ course });
     } catch (error) {
         res.status(500).json({
             message: "An error occurred during the course retrieval process",
