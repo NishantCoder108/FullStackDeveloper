@@ -45,7 +45,7 @@ app.post("/signup", async (req, res) => {
         const isAdminUser = await Admin.findOne({ username, password });
 
         if (isAdminUser) {
-            res.json({
+            res.status(403).json({
                 message: "You are already signed up. Please log in.",
             });
             return;
@@ -73,19 +73,18 @@ app.post("/signup", async (req, res) => {
 //Login
 app.post("/login", async (req, res) => {
     const { username, password } = req.body;
-    const user = ADMIN.find(
-        (user) => user.username === username && user.password === password
-    );
-
-    if (!user) {
-        res.json({
-            message: "Invalid username or password",
-        });
-
-        return;
-    }
 
     try {
+        const adminUser = await Admin.findOne({ username, password });
+
+        console.log({ adminUser });
+        if (!adminUser) {
+            res.status(403).json({
+                message: "Invalid username or password",
+            });
+
+            return;
+        }
         const token = createJWTToken({ username }, secret);
 
         res.json({
