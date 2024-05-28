@@ -155,56 +155,16 @@ app.get("/courses", isAuthenticate, async (req, res) => {
 // Update course
 app.put("/courses/:courseId", isAuthenticate, async (req, res) => {
     const courseId = req.params.courseId;
-    const { imageurl, title, description, price, isPublished } = req.body;
+    // const { imageurl, title, description, price, isPublished } = req.body;
 
     try {
-        const allCourseLists = await fs.readFile(
-            path.join(__dirname, "../Db/coursedb.json"),
-            "utf-8"
-        );
-
-        const parsedCourseLists = JSON.parse(allCourseLists);
-
-        const courseIdx = parsedCourseLists.findIndex((c) => c.id === courseId);
-
-        console.log("Course: ", courseIdx);
-
-        if (courseIdx === -1) {
-            res.status(404).json({
-                message: "Course  not found",
-            });
-            return;
-        }
-
-        const {
-            imageurl: courseImgUrl,
-            title: courseTitle,
-            description: courseDescription,
-            isPublished: courseIsPublished,
-            price: coursePrice,
-        } = parsedCourseLists[courseIdx];
-
-        const updatedCourse = {
-            imageurl: imageurl || courseImgUrl,
-            title: title || courseTitle,
-            description: description || courseDescription,
-            price: price || coursePrice,
-            isPublished: isPublished || courseIsPublished,
-            id: courseId,
-        };
-
-        parsedCourseLists[courseIdx] = updatedCourse;
-
-        const updatedCourseLists = JSON.stringify(parsedCourseLists);
-
-        await fs.writeFile(
-            path.join(__dirname, "../Db/coursedb.json"),
-            updatedCourseLists
-        );
+        const course = await Course.findByIdAndUpdate(courseId, req.body, {
+            new: true, //it will return modified data
+        });
 
         res.status(200).json({
             message: "Course updated successfully",
-            updatedCourse,
+            course,
         });
     } catch (error) {
         res.status(500).json({
