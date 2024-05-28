@@ -180,32 +180,13 @@ app.delete("/courses/:courseId", isAuthenticate, async (req, res) => {
     const courseId = req.params.courseId;
 
     try {
-        const allCourseLists = await fs.readFile(
-            path.join(__dirname, "../Db/coursedb.json"),
-            "utf-8"
-        );
+        const course = await Course.findByIdAndDelete(courseId);
 
-        const parsedCourseLists = JSON.parse(allCourseLists);
-
-        const courseIdx = parsedCourseLists.findIndex((c) => c.id === courseId);
-
-        if (courseIdx !== -1) {
-            parsedCourseLists.splice(courseIdx, 1);
-
-            await fs.writeFile(
-                path.join(__dirname, "../Db/coursedb.json"),
-                JSON.stringify(parsedCourseLists)
-            );
-
-            res.status(200).json({
-                message: "Course deleted successfully",
-                updatedCourse: parsedCourseLists,
-            });
-        } else {
-            res.status(404).json({
-                message: "Course not found",
-            });
-        }
+        console.log({ course });
+        res.status(200).json({
+            message: "Course deleted successfully",
+            courseId: course.id,
+        });
     } catch (error) {
         res.status(500).json({
             message: "An error occurred during the course deletion process",
