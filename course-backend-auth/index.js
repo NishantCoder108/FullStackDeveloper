@@ -1,9 +1,12 @@
+require("dotenv/config");
 const express = require("express");
 const AdminRoutes = require("./routes/Admin");
 const UserRoutes = require("./routes/Users");
+const dbConnect = require("./Db");
 const app = express();
 
 const PORT = 3000;
+dbConnect();
 
 app.use(express.json());
 
