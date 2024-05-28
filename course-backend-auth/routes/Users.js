@@ -130,48 +130,29 @@ app.get("/courses", isAuthenticate, async (req, res) => {
 app.post("/courses/:courseId", isAuthenticate, async (req, res) => {
     try {
         const { courseId } = req.params;
-        const reqUser = req.user;
+        const { username } = req.user;
 
-        console.log("Auth User", reqUser);
-        console.log("USERS", USERS);
-        const allCourseLists = await fs.readFile(
-            path.join(__dirname, "../Db/coursedb.json"),
-            "utf-8"
-        );
+        const user = await User.findOne({ username }).select("-password");
+        console.log({ user });
 
-        const parsedCourseLists = JSON.parse(allCourseLists);
-        const course = parsedCourseLists.find(
-            (course) => course.id === courseId
-        );
+        const course = await Course.findById({ _id: courseId });
+        console.log({ course });
 
-        if (!course) {
-            res.status(404).json({
-                message: "Course not found",
+        const purchasedCourses = user.purchasedCourses;
+
+        if (purchasedCourses.includes(courseId)) {
+            res.status(400).json({
+                message: "Course already purchased",
             });
             return;
         }
 
-        console.log(reqUser);
-        const userIdx = USERS.findIndex((u) => u.id === reqUser.id);
-        console.log(userIdx);
+        user.purchasedCourses.push(courseId);
+        await user.save();
 
-        if (userIdx !== -1) {
-            const purchasedCourse = USERS[userIdx].purchasedCourse || [];
-            USERS[userIdx] = {
-                ...USERS[userIdx],
-                purchasedCourse: [...purchasedCourse, course],
-            };
-
-            res.status(200).json({
-                message: "Course purchased successfully",
-                user: USERS,
-            });
-
-            return;
-        }
-
-        res.status(401).json({
-            message: "You are not authenticated",
+        res.status(201).json({
+            message: "Course purchased successfully",
+            courseId: course.id,
         });
     } catch (error) {
         res.status(500).json({
@@ -181,19 +162,20 @@ app.post("/courses/:courseId", isAuthenticate, async (req, res) => {
     }
 });
 
-app.get("/courses/all", isAuthenticate, (req, res) => {
+app.get("/purchasedCourse", isAuthenticate, async (req, res) => {
     try {
-        const reqUser = req.user;
+        const { username } = req.user;
 
-        const userIdx = USERS.findIndex((u) => u.id === reqUser.id);
+        const user = await User.findOne({ username }).populate(
+            "purchasedCourses"
+        );
 
-        if (userIdx !== -1) {
-            const purchasedCourse = USERS[userIdx].purchasedCourse || [];
-            res.status(200).json({
-                message: "All purchased courses",
-                user: purchasedCourse,
-            });
-        }
+        const purchasedCourse = user.purchasedCourses || [];
+
+        res.status(200).json({
+            message: "All purchased courses",
+            course: purchasedCourse,
+        });
     } catch (error) {
         res.status(500).json({
             message: "No course",
