@@ -104,22 +104,19 @@ app.post("/login", async (req, res) => {
 //Get all courses list
 app.get("/courses", isAuthenticate, async (req, res) => {
     try {
-        const allCourseLists = await fs.readFile(
-            path.join(__dirname, "../Db/coursedb.json"),
-            "utf-8"
-        );
+        const course = await Course.find({});
 
-        const parsedCourseLists = JSON.parse(allCourseLists);
-
-        if (parsedCourseLists.length < 1) {
-            res.status(404).json({
-                message: "No courses found",
+        if (!course || course.length === 0) {
+            res.status(200).json({
+                message: "No courses available at the moment.",
+                course: course,
             });
             return;
         }
 
         res.json({
-            courses: parsedCourseLists,
+            message: "All courses retrieved successfully.",
+            courses: course,
         });
     } catch (error) {
         res.status(500).json({
