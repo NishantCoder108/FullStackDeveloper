@@ -1,0 +1,60 @@
+console.log("Helllo , I am from User Index.ts");
+
+const inputEle = document.getElementById("userInput") as HTMLInputElement;
+const submitBtn = document.getElementById("submitBtn") as HTMLButtonElement;
+
+const div = document.createElement("div");
+div.style.display = "flex";
+div.style.justifyContent = "flex-start";
+div.style.gap = "9px";
+div.style.textDecoration = "none";
+
+document.body.append(div);
+
+submitBtn.addEventListener("click", () => {
+    const inputVal = inputEle.value;
+
+    const ul = document.createElement("ul");
+    const li = document.createElement("li");
+    const deleteBtn = document.createElement("button");
+
+    li.textContent = inputVal;
+
+    // styling in list element
+    ul.style.display = "flex";
+    ul.style.justifyContent = "flex-start";
+    ul.style.alignItems = "center";
+    ul.style.textDecoration = "none";
+    ul.style.gap = "9px";
+    ul.style.border = "1px solid gray";
+    ul.style.padding = "1rem";
+    ul.style.listStyleType = "none";
+    li.style.color = "green";
+    li.style.textDecoration = "none";
+
+    ul.appendChild(li);
+    ul.appendChild(deleteBtn);
+
+    //delete btn
+    deleteBtn.id = "deleteId";
+    deleteBtn.textContent = "Delete";
+
+    deleteBtn.addEventListener("click", () => {
+        console.log("Deleted list");
+        ul.remove();
+    });
+
+    div.append(ul);
+    console.log({ inputVal });
+    console.log("Hello from btn element");
+    inputEle.value = "";
+});
+
+// document.addEventListener("DOMContentLoaded", () => {
+//     const deleteList = document.getElementById("deleteId") as HTMLButtonElement;
+
+//     deleteList.addEventListener("click", (e) => {
+//         console.log("Clicked delete Button");
+//         console.log("Delete Event : ", e);
+//     });
+// });
